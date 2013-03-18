@@ -1,0 +1,126 @@
+#!/bin/sh
+
+# The following files are bundled:
+#
+# 'CocoaDialog.app'
+#
+#
+
+DIALOG="$1/Contents/Resources/CocoaDialog.app/Contents/MacOS/CocoaDialog"
+TITLE="PiWriter"
+TERM="xterm-256color"
+
+if [ -f ~/.PIwriter.1 ] ; then
+    echo '==> This is not the first run... Skipping donation dialog.'
+else
+    open http://codejugglers.nl
+    touch ~/.PIwriter.1
+fi
+
+do_exit(){
+    if [ -f "/tmp/PIwriter*" ] ; then
+        rm /tmp/PIwriter*
+    fi
+    if [ "$1" = 0 ] ; then
+        exit 0
+    else
+        kill "$$"
+        exit 1
+    fi
+}
+
+
+IMAGE=`"$DIALOG" fileselect --title $TITLE --no-select-directories --text 'Select An Image File To Write To SD:' --no-select-multiple --with-extensions '.img'`
+if [ -f "$IMAGE" ] ; then
+	echo "Image $IMAGE selected..."
+        echo "$IMAGE" > /tmp/PIwriter-image.tmp
+else
+	do_exit 1
+fi
+
+UNPLUG=`"$DIALOG" ok-msgbox --title "$TITLE" --text "Disconnect Your SD card And Press OK."`
+if [ $UNPLUG = 2 ] ; then
+	do_exit 1
+fi
+
+ls /dev/rdisk* > /tmp/PIwriter.tmp1
+
+PLUG=`"$DIALOG" ok-msgbox --title "$TITLE" --text "Now Connect Your SD card And Press OK."`
+if [ $PLUG = 2 ] ; then
+	do_exit 1
+fi
+
+FindDevice(){
+	echo 'Waiting 10 sec to let the device settle...'
+	sleep 10
+	ls /dev/rdisk* > /tmp/PIwriter.tmp2
+	 VOLUMES=`diff /tmp/PIwriter.tmp1 /tmp/PIwriter.tmp2 | grep '>' | awk '{ print $2 }' | grep -v disk0`
+	DEVICE=`echo $VOLUMES | awk -F ' ' '{ print $1 }'`
+	echo $DEVICE > /tmp/PIwriter-device.tmp
+}
+
+Find_Multidev(){
+        if  [  $# != 1 ] ; then
+            echo 'Multiple devices or a Multi-functional Device Detected. Cannot make an automated selection.'
+            echo 'Please do not use SD adaptors wich include other devices. (like 3G modems etc..)'
+            echo 'Make sure you insert only 1 device during device detection!'
+                "$DIALOG" msgbox --title "$TITLE" --button1 Quit --text "Multiple devices or Multi-functional device detected... Make sure you only insert 1 device... Will Now Exit..." &>/dev/null 
+					do_exit 1
+        fi
+}
+
+Find_Multidev "$DEVICE"
+		echo "Selecting Device: $DEVICE" && sleep 2
+
+FindDevice | "$DIALOG" progressbar --title "$TITLE" --text "Searching For Device" 
+
+DEVICE=`cat /tmp/PIwriter-device.tmp`
+IMAGE=`cat /tmp/PIwriter-image.tmp`
+
+echo 'Unmounting Device...'
+
+	UMOUNT=`ls $DEVICE*`
+	for i in $UMOUNT ; do
+		if [ "$i" != "$DEVICE" ] ; then
+			hdiutil unmount $i
+			ERROR="$?"
+		fi
+			if [ "$ERROR" != '0' ] ; then
+				hdiutil unmount `echo $i | sed s'/rdisk/disk/'`
+				ERROR="$?"
+			fi
+			if [ "$ERROR" != '0' ] ; then
+					"$DIALOG" msgbox --title "$TITLE" --button1 Quit --text "Cannot Unmount The SD Device... Will Now Exit..." &>/dev/null 
+					do_exit 1
+			fi
+	done
+
+	CONTINUE=`"$DIALOG" msgbox --title "$TITLE" --text "Selecting Device: $DEVICE Is This Correct???" --button1 Install --button2 Quit --informative-text 'Be 100% sure here for this action will erase the entire disk!!!'`
+
+	if [ "$CONTINUE" = '1' ] ; then
+                echo 'Starting the clone process.... Please be patient....'
+                
+                Rundd(){
+                echo
+                date +'Task Started At: %H:%M:%S'
+                echo
+                   dd if="$IMAGE" of="$DEVICE" bs=1m
+		if [ "$?" != '0' ] ; then
+			"$DIALOG" msgbox --title "$TITLE - FAILED" --button1 'Quit' --text 'Failed To Write Image To Disk!' &>/dev/null 
+			do_exit 1
+		else
+			"$DIALOG" ok-msgbox --title "$TITLE - FINISHED" --text 'Finished Writing Image To SD Card!' --informative-text 'You can now disconnect the SD and plug it in your Pi!'  &>/dev/null
+			EJECT=`echo $DEVICE | sed s'/rdisk/disk/'`
+			hdiutil eject "$EJECT"
+		fi
+                }
+                
+		Rundd | "$DIALOG" progressbar --title "$TITLE" --text "Writing SD-card... This Might Take a Long Time..."                
+
+	fi
+        
+if [ -f /tmp/PIwriter* ] ; then
+    rm /tmp/PIwriter*
+fi
+
+do_exit $?
