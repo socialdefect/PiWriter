@@ -22,7 +22,7 @@
 	<key>CFBundleExecutable</key>
 	<string>PiWriter2</string>
 	<key>CFBundleGetInfoString</key>
-	<string>PiWriter2 1.0 Copyright 2014 Arjan van Lent - Codejugglers</string>
+	<string>PiWriter2 2.0.0 Copyright 2014 Arjan van Lent - Codejugglers</string>
 	<key>CFBundleIconFile</key>
 	<string>appIcon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -34,7 +34,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>2.0.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>LSEnvironment</key>
@@ -48,7 +48,7 @@
 	<key>NSAppleScriptEnabled</key>
 	<false/>
 	<key>NSHumanReadableCopyright</key>
-	<string>PiWriter2 1.0 Copyright 2014 Arjan van Lent - Codejugglers</string>
+	<string>PiWriter2 2.0.0 Copyright 2014 Arjan van Lent - Codejugglers</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

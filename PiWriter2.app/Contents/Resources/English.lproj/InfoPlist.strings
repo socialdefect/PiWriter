@@ -1,4 +1,4 @@
 CFBundleName = "PiWriter2";
-CFBundleShortVersionString = "1.0";
-CFBundleGetInfoString = "PiWriter2 version 1.0 Copyright 2014 Arjan van Lent - Codejugglers";
+CFBundleShortVersionString = "2.0.0";
+CFBundleGetInfoString = "PiWriter2 version 2.0.0 Copyright 2014 Arjan van Lent - Codejugglers";
 NSHumanReadableCopyright = "Copyright 2014 Arjan van Lent - Codejugglers.";
